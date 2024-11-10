@@ -2,16 +2,20 @@
 
 class Game
 {
-    private const int Width = 10;
-    private const int Height = 12;
-    private const int BlockFreq = 28;
+    const int Width = 10;
+    const int Height = 12;
+    const int BlockFreq = 28;
+    const int MaxTurns = 20; 
 
-    private char[,] field = new char[Height, Width];
-    private const char Dog = '@';
-    private int dogX, dogY;
-    private int dx, dy;
-    private int finishX, finishY;
-    private bool reachedFinish;
+    char[,] field = new char[Height, Width];
+    const char Dog = '@';
+    const char Jetpack = 'J';
+    int dogX, dogY;
+    int dx, dy;
+    int finishX, finishY;
+    bool reachedFinish;
+    bool hasJetpack = false;
+    int turnsLeft = MaxTurns;
 
     static void Main()
     {
@@ -19,7 +23,7 @@ class Game
         game.Run();
     }
 
-    private void GenerateField()
+    void GenerateField()
     {
         var random = new Random();
         for (int i = 0; i < Height; i++)
@@ -33,9 +37,13 @@ class Game
         finishX = random.Next(Width);
         finishY = random.Next(Height);
         field[finishY, finishX] = 'F';
+
+        int jetpackX = random.Next(Width);
+        int jetpackY = random.Next(Height);
+        field[jetpackY, jetpackX] = Jetpack;
     }
 
-    private void Draw()
+    void Draw()
     {
         for (int i = 0; i < Height; i++)
         {
@@ -45,27 +53,29 @@ class Game
             }
             Console.WriteLine();
         }
+        Console.WriteLine($"Turns left: {turnsLeft}");
+        if (hasJetpack) Console.WriteLine("You have a jetpack!");
     }
 
-    private void DrawSymbol(int i, int j)
+    void DrawSymbol(int i, int j)
     {
         Console.Write(i == dogY && j == dogX ? Dog : field[i, j]);
     }
 
-    private void PlaceDog()
+    void PlaceDog()
     {
         var random = new Random();
         dogX = random.Next(Width);
         dogY = random.Next(Height);
     }
 
-    private void Generate()
+    void Generate()
     {
         GenerateField();
         PlaceDog();
     }
 
-    private void GetInput()
+    void GetInput()
     {
         dx = dy = 0;
         Console.Write("(w/a/s/d): ");
@@ -81,31 +91,42 @@ class Game
         }
     }
 
-    private bool IsEndGame() => reachedFinish;
+    bool IsEndGame() => reachedFinish || turnsLeft <= 0;
 
-    private bool IsWalkable(int x, int y) => field[y, x] != '#';
+    bool IsWalkable(int x, int y) => field[y, x] != '#';
 
-    private bool CanGoTo(int newX, int newY)
+    bool CanGoTo(int newX, int newY)
     {
         bool withinBounds = newX >= 0 && newY >= 0 && newX < Width && newY < Height;
-        return withinBounds && IsWalkable(newX, newY);
+        return withinBounds && (IsWalkable(newX, newY) || hasJetpack); 
     }
 
-    private void TryGoTo(int newX, int newY)
+    void TryGoTo(int newX, int newY)
     {
         if (CanGoTo(newX, newY))
         {
+            if (field[newY, newX] == '#')
+            {
+                hasJetpack = false; 
+            }
             GoTo(newX, newY);
         }
     }
 
-    private void GoTo(int newX, int newY)
+    void GoTo(int newX, int newY)
     {
         dogX = newX;
         dogY = newY;
+
+        if (field[dogY, dogX] == Jetpack)
+        {
+            hasJetpack = true;
+            field[dogY, dogX] = '.'; 
+            Console.WriteLine("You picked up a jetpack!");
+        }
     }
 
-    private void CheckFinish()
+    void CheckFinish()
     {
         if (dogX == finishX && dogY == finishY)
         {
@@ -113,15 +134,16 @@ class Game
         }
     }
 
-    private void UpdateGameLogic()
+    void UpdateGameLogic()
     {
         int newDogX = dogX + dx;
         int newDogY = dogY + dy;
         TryGoTo(newDogX, newDogY);
         CheckFinish();
+        turnsLeft--; 
     }
 
-    public void Run()
+     void Run()
     {
         Generate();
         while (!IsEndGame())
@@ -130,6 +152,13 @@ class Game
             GetInput();
             UpdateGameLogic();
         }
-        Console.WriteLine("УИИИИИИИИ");
+        if (reachedFinish)
+        {
+            Console.WriteLine("УИИИИИИИИ");
+        }
+        else
+        {
+            Console.WriteLine("Game over!");
+        }
     }
 }
