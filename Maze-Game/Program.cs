@@ -5,7 +5,7 @@ class Game
     const int Width = 10;
     const int Height = 12;
     const int BlockFreq = 28;
-    const int MaxTurns = 20; 
+    const int MaxTurns = 20;
 
     char[,] field = new char[Height, Width];
     const char Dog = '@';
@@ -53,7 +53,7 @@ class Game
             }
             Console.WriteLine();
         }
-        Console.WriteLine($"Turns left: {turnsLeft}");
+        Console.WriteLine($"Number of move: {turnsLeft}");
         if (hasJetpack) Console.WriteLine("You have a jetpack!");
     }
 
@@ -98,7 +98,7 @@ class Game
     bool CanGoTo(int newX, int newY)
     {
         bool withinBounds = newX >= 0 && newY >= 0 && newX < Width && newY < Height;
-        return withinBounds && (IsWalkable(newX, newY) || hasJetpack); 
+        return withinBounds && (IsWalkable(newX, newY) || hasJetpack);
     }
 
     void TryGoTo(int newX, int newY)
@@ -107,7 +107,7 @@ class Game
         {
             if (field[newY, newX] == '#')
             {
-                hasJetpack = false; 
+                hasJetpack = false;
             }
             GoTo(newX, newY);
         }
@@ -121,7 +121,7 @@ class Game
         if (field[dogY, dogX] == Jetpack)
         {
             hasJetpack = true;
-            field[dogY, dogX] = '.'; 
+            field[dogY, dogX] = '.';
             Console.WriteLine("You picked up a jetpack!");
         }
     }
@@ -140,17 +140,21 @@ class Game
         int newDogY = dogY + dy;
         TryGoTo(newDogX, newDogY);
         CheckFinish();
-        turnsLeft--; 
     }
 
-     void Run()
+    void Run()
     {
         Generate();
         while (!IsEndGame())
         {
             Draw();
             GetInput();
-            UpdateGameLogic();
+
+            if (dx != 0 || dy != 0)
+            {
+                UpdateGameLogic();
+                turnsLeft--;
+            }
         }
         if (reachedFinish)
         {
@@ -158,7 +162,7 @@ class Game
         }
         else
         {
-            Console.WriteLine("Game over!");
+            Console.WriteLine("Game over");
         }
     }
 }
